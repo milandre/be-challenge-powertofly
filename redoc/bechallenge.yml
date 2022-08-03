@@ -1,0 +1,110 @@
+openapi: "3.0.2"
+schemes:
+  - http
+  - https
+info:
+  description: |
+    This is a sample server BE Challenge Powertofly.
+    You can find out more about flask-redoc at
+    [https://github.com/mzaglia/flask-redoc](https://github.com/mzaglia/flask-redoc).
+    # Introduction
+    This API is documented in **OpenAPI format**
+  version: 1.0.0
+  title: ReDoc BE Challenge Powertofly
+  license:
+    name: MIT
+tags:
+  - name: user
+    description: Everything about app Users
+x-tagGroups:
+  - name: API
+    tags:
+      - user
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          description: User ID
+          type: integer
+          format: int64
+        email:
+          description: User email address
+          type: string
+          format: email
+          example: john.smith@example.com
+        first_name:
+          description: User first name
+          type: string
+          minLength: 1
+          example: John
+        last_name:
+          description: User last name
+          type: string
+          minLength: 1
+          example: Smith
+    Users:
+      type: array
+      items:
+        $ref: "#/components/schemas/User"
+paths:
+  /api/users:
+    get:
+      tags:
+        - user
+      summary: List all users
+      operationId: listUsers
+      produces:
+        - application/json
+      parameters:
+        - name: limit
+          in: query
+          description: How many items to return at one time (max 10000).
+          required: false
+          schema:
+            type: integer
+            format: int64
+        - name: cursor
+          in: query
+          description: A cursor encode for pagination.
+          required: false
+        - name: id
+          in: query
+          description: User ids to filter by.
+          required: false
+          type: array
+          items:
+            type: string
+        - name: email
+          in: query
+          description: Email list to filter by.
+          required: false
+          type: array
+          items:
+            type: string
+        - name: first_name
+          in: query
+          description: User first name list to filter by.
+          required: false
+          type: array
+          items:
+            type: string
+        - name: last_name
+          in: query
+          description: User last name list to filter by.
+          required: false
+          type: array
+          items:
+            type: string
+      responses:
+        '200':
+          description: Successful Operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Users"
+        '400':
+          description: Invalid information supplied
+        '404':
+          description: Users not found
