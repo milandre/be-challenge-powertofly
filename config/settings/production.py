@@ -12,4 +12,3 @@ class ProductionConfig(Config):
     @classmethod
     def init_app(cls, app):
         Config.init_app(app)
-        assert os.environ.get('SECRET_KEY'), 'SECRET_KEY IS NOT SET!'
