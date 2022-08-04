@@ -91,3 +91,6 @@ venv.bak/
 
 # Project
 storage/
+
+# Custom
+.vscode/
