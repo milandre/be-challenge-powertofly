@@ -43,7 +43,7 @@ docker-compose-down:
 	docker-compose down -v --remove-orphans && docker system prune
 
 docker-compose-test:
-	docker-compose exec powertofly python powertofly.py test
+	docker-compose exec powertofly python -m flask test
 
 ###################################
 ### Flask Dev
@@ -57,10 +57,10 @@ upgradedb: env-setup
 	env FLASK_APP="$(FLASK_APP):create_app('$(FLASK_CONFIG)')" $(BIN)/$(PYTHON_VERSION_CUR) -m flask db upgrade
 
 fakedatadb: env-setup
-	env FLASK_APP="$(FLASK_APP):create_app('$(FLASK_CONFIG)')" $(BIN)/$(PYTHON_VERSION_CUR) powertofly.py add-fake-data -n 2000000
+	env FLASK_APP="$(FLASK_APP):create_app('$(FLASK_CONFIG)')" $(BIN)/$(PYTHON_VERSION_CUR) -m flask add-fake-data -n 2000000
 
 test: env-setup
-	env FLASK_APP="$(FLASK_APP):create_app('$(FLASK_CONFIG)')" $(BIN)/$(PYTHON_VERSION_CUR) powertofly.py test
+	env FLASK_APP="$(FLASK_APP):create_app('$(FLASK_CONFIG)')" $(BIN)/$(PYTHON_VERSION_CUR) -m flask test
 
 pre-commit-install: env-setup
 	$(BIN)/pre-commit install
