@@ -39,8 +39,6 @@ COPY config /powertofly/config
 COPY migrations /powertofly/migrations
 COPY redoc /powertofly/redoc
 COPY tests /powertofly/tests
-COPY .db.env .env .redis.env powertofly.py init_database.sh /powertofly/
+COPY powertofly.py init_database.sh /powertofly/
 
-# expose port and run entrypoint.sh
-#ENTRYPOINT ["/powertofly/entrypoint.sh"]
 ENTRYPOINT ["python3", "powertofly.py"]
