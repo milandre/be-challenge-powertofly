@@ -7,7 +7,6 @@ from config import config
 
 from .api import views
 from .api.models import db
-from .api.schemas import UserSchema
 
 
 def create_app(config_name):
@@ -15,10 +14,6 @@ def create_app(config_name):
     app = Flask(__name__)
     app.config.from_object(config[config_name])
     config[config_name].init_app(app)
-
-    # ReDoc config
-    app.config['REDOC'] = {'marshmallow_schemas': [UserSchema]}
-
     # Init and migrate database
     db.init_app(app)
     Migrate(app, db)

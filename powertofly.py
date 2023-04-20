@@ -1,6 +1,7 @@
 import os
 
 import click
+from dotenv import load_dotenv
 from flask_redoc import Redoc
 
 from app import create_app
@@ -8,6 +9,7 @@ from app.api.models import User, db
 from config import config
 
 # Flask config setup and create app
+load_dotenv()
 flask_config = os.getenv('FLASK_CONFIG')
 app = create_app(flask_config or 'default')
 
@@ -45,7 +47,7 @@ def add_fake_data(number_users):
     Adds fake data to the database.
     """
     print(f'Add {number_users} testing users to the database')
-    User.generate_fake_users(number_users)
+    User.insert_fake_users_into_db(number_users)
 
 
 @app.cli.command("setup-dev")

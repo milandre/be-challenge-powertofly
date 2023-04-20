@@ -8,6 +8,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    cap_add:
+      - SYS_PTRACE
   postgres:
     image: postgres:14.4-alpine
     volumes:

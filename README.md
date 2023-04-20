@@ -5,7 +5,7 @@ An API endpoint challenge for PowerToFly using Flask framework.
 You will find [here](https://gist.github.com/scabbiaza/82e9069cfa71c4d7aa9d9539a794a1db) a specific list of requirements for this challenge.
 
 ## Requirements
-* Python 3.9+
+* [Python 3.9+](https://www.python.org/downloads/)
 * [Postgres 14.4](https://www.postgresql.org/docs/14/tutorial-install.html)
 * [Docker](https://docs.docker.com/engine/install/ubuntu/#install-using-the-convenience-script)
 * [Docker Compose](https://docs.docker.com/compose/install/)

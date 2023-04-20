@@ -1,9 +1,22 @@
+import os
+import time
+
+from faker import Faker
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import select
-from sqlalchemy.dialects.postgresql import insert
+from pyspark.sql import SparkSession
+from pyspark.sql.types import IntegerType, StringType, StructField, StructType, TimestampType
 from sqlalchemy_utils import Timestamp
 
+# Setting database object
 db = SQLAlchemy()
+
+# Setting database and spark information
+basedir = os.path.abspath(os.path.join(__file__, '../../..'))
+database_info = os.getenv('DATABASE_URL').split('@') or 'sqlite:///' + os.path.join(basedir, 'db.sqlite')
+jdbc_database_url = f"jdbc:postgresql://{database_info[1] if len(database_info) > 0 else database_info[0]}"
+database_user = database_info[0].split("//")[1].split(":")[0] if len(database_info) > 0 else "admin"
+database_password = database_info[0].split("//")[1].split(":")[1] if len(database_info) > 0 else "example"
+spark_classpath = os.getenv('SPARK_CLASSPATH')
 
 
 class User(db.Model, Timestamp):
@@ -27,39 +40,59 @@ class User(db.Model, Timestamp):
         return f'{self.first_name} {self.last_name}'
 
     @staticmethod
-    def add_fake_users_to_db(buffer, fake):
-        print("Starting Bulk...")
-        stmt = insert(User).values(buffer)
-        stmt = stmt.on_conflict_do_update(
-            index_elements=[User.email], set_=dict(first_name=fake.first_name(), last_name=fake.last_name())
-        ).returning(User)
-        orm_smt = select(User).from_statement(stmt).execution_options(populate_existing=True)
-        for user in db.session.execute(orm_smt).scalars():
-            print(f'Inserted or updated: {user}')
-
-    @staticmethod
-    def generate_fake_users(count=10, max_rows_per_transaction=500000, **kwargs):
-        """Generate a number of fake users."""
-        from faker import Faker
-
+    def insert_fake_users_into_db(count: int = 10, max_rows_per_transaction: int = 100000, **kwargs) -> None:
         fake = Faker()
+        users_per_partition = max_rows_per_transaction
+        num_partitions = count // max_rows_per_transaction
 
-        buffer = []
-        for _ in range(count):
-            buffer.append(
-                dict(
-                    email=fake.unique.email(),
-                    first_name=fake.first_name(),
-                    last_name=fake.last_name(),
-                    created=fake.date_time(),
+        # Define schema
+        schema = StructType(
+            [
+                StructField("id", IntegerType(), False),
+                StructField("email", StringType(), False),
+                StructField("first_name", StringType(), False),
+                StructField("last_name", StringType(), False),
+                StructField("created", TimestampType(), False),
+                StructField("updated", TimestampType(), False),
+            ]
+        )
+
+        # Initialize SparkSession
+        spark = (
+            SparkSession.builder.appName("Bulk Insert Dummy Users")
+            .config("spark.driver.extraClassPath", spark_classpath)
+            .config("spark.executor.extraClassPath", spark_classpath)
+            .getOrCreate()
+        )
+
+        # Create PySpark DataFrame in parallel
+        rdd = spark.sparkContext.parallelize(range(num_partitions), num_partitions)
+        df = rdd.flatMap(
+            lambda x: [
+                (
+                    id + x * users_per_partition,
+                    f"user{id + x*users_per_partition}@{fake.domain_name()}",
+                    fake.first_name(),
+                    fake.last_name(),
+                    fake.date_time(),
+                    fake.date_time(),
                 )
-            )
-            if len(buffer) % max_rows_per_transaction == 0:
-                User.add_fake_users_to_db(buffer, fake)
-                buffer = []
+                for id in range(users_per_partition)
+            ]
+        ).toDF(schema)
 
-        if len(buffer) > 0:
-            User.add_fake_users_to_db(buffer, fake)
+        start_time = time.time()
+        df.write.mode("overwrite").jdbc(
+            jdbc_database_url,
+            "users",
+            properties={"user": database_user, "password": database_password, "driver": "org.postgresql.Driver"},
+        )
+
+        duration = time.time() - start_time
+        print(f"Spark insertions time: {duration:.2f} seconds.")
+
+        # Stop SparkSession
+        spark.stop()
 
     def __repr__(self):
         return '<User \'%s\'>' % self.full_name()
