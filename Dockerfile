@@ -21,7 +21,7 @@ RUN mkdir -p /usr/share/man/man1 /usr/share/man/man2 \
 ENV JAVA_HOME /usr/lib/jvm/java-11-openjdk-amd64/
 
 # Download and copy the PostgreSQL JDBC driver JAR file
-ADD https://jdbc.postgresql.org/download/postgresql-42.2.23.jar /opt/postgresql-jdbc-driver.jar
+ADD https://jdbc.postgresql.org/download/postgresql-42.6.0.jar /opt/postgresql-jdbc-driver.jar
 
 # Set the SPARK_CLASSPATH environment variable to include the JDBC driver
 ENV SPARK_CLASSPATH /opt/postgresql-jdbc-driver.jar
